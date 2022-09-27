@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from 'react-redux'
-import { postAdded } from './postsSlice'
-import { selectAllUsers } from '../users/usersSlice'
+import { addPost } from './postsSlice'
+import { selectAllUsers, getUsersStatus, fetchUsers } from '../users/usersSlice'
+import { THUNK_STATUSES } from "../../common/dicts";
 
 const AddPostForm = () => {
   const dispatch = useDispatch()
@@ -9,20 +10,35 @@ const AddPostForm = () => {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [userId, setUserId] = useState('')
+  const [addRequestStatus, setAddRequestStatus] = useState(THUNK_STATUSES.idle)
 
   const users = useSelector(selectAllUsers)
+  const usersStatus = useSelector(getUsersStatus)
 
   const onTitleChanged = (e) => setTitle(e.target.value)
   const onContentChanged = (e) => setContent(e.target.value)
   const onAuthorChanged = (e) => setUserId(e.target.value)
 
+  useEffect(() => {
+    if (usersStatus === THUNK_STATUSES.idle) dispatch(fetchUsers())
+  }, [usersStatus, dispatch])
+
+  const formValid = [title, content, userId].every(Boolean) && addRequestStatus === THUNK_STATUSES.idle
+
   const onSavePostClicked = (e) => {
     if (formValid) {
-      dispatch(
-        postAdded(title, content, parseInt(userId, 10))
-      )
-      setTitle('')
-      setContent('')
+      try {
+        setAddRequestStatus(THUNK_STATUSES.pending)
+        dispatch(addPost({ title, body: content, userId: parseInt(userId, 10) })).unwrap()
+
+        setTitle('')
+        setContent('')
+        setUserId('')
+      } catch (err) {
+        console.error('Failed to save post', err)
+      } finally {
+        setAddRequestStatus(THUNK_STATUSES.idle)
+      }
     }
   }
 
@@ -31,8 +47,6 @@ const AddPostForm = () => {
       {user.name}
     </option>
   ))
-
-  const formValid = Boolean(title) && Boolean(content) && Boolean(userId)
 
   return (
     <section>
