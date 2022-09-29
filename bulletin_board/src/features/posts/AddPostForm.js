@@ -1,11 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useDispatch, useSelector } from 'react-redux'
 import { addPost } from './postsSlice'
-import { selectAllUsers, getUsersStatus, fetchUsers } from '../users/usersSlice'
+import { selectAllUsers } from '../users/usersSlice'
 import { THUNK_STATUSES } from "../../common/dicts";
+import { useNavigate } from 'react-router-dom'
 
 const AddPostForm = () => {
   const dispatch = useDispatch()
+  const navigate = useNavigate()
 
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
@@ -13,15 +15,10 @@ const AddPostForm = () => {
   const [addRequestStatus, setAddRequestStatus] = useState(THUNK_STATUSES.idle)
 
   const users = useSelector(selectAllUsers)
-  const usersStatus = useSelector(getUsersStatus)
 
   const onTitleChanged = (e) => setTitle(e.target.value)
   const onContentChanged = (e) => setContent(e.target.value)
   const onAuthorChanged = (e) => setUserId(e.target.value)
-
-  useEffect(() => {
-    if (usersStatus === THUNK_STATUSES.idle) dispatch(fetchUsers())
-  }, [usersStatus, dispatch])
 
   const formValid = [title, content, userId].every(Boolean) && addRequestStatus === THUNK_STATUSES.idle
 
@@ -34,6 +31,8 @@ const AddPostForm = () => {
         setTitle('')
         setContent('')
         setUserId('')
+
+        navigate('/')
       } catch (err) {
         console.error('Failed to save post', err)
       } finally {

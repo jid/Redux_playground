@@ -21,6 +21,20 @@ export const addPost = createAsyncThunk('posts/addNewPost', async (payload) => {
   return response.data
 })
 
+export const updatePost = createAsyncThunk('posts/updatePost', async (payload) => {
+  const { id } = payload
+  const response = await axios.patch(`${POSTS_URL}/${id}`, payload)
+  return response.data
+})
+
+export const deletePost = createAsyncThunk('posts/deletePost', async (payload) => {
+  const { id } = payload
+  const response = await axios.delete(`${POSTS_URL}/${id}`)
+  if (response?.status === 200) return payload
+
+  return `${response?.status}: ${response?.statusText}`
+})
+
 const postsSlice = createSlice({
   name: 'posts',
   initialState,
@@ -93,11 +107,33 @@ const postsSlice = createSlice({
         }
         state.posts.push(action.payload)
       })
+      .addCase(updatePost.fulfilled, (state, action) => {
+        if (!action.payload?.id) {
+          console.log('Update could not complete')
+          console.log(action.payload)
+          return
+        }
+        const { id } = action.payload
+        action.payload.date = new Date().toISOString()
+        const posts = state.posts.filter(el => el.id !== id)
+        state.posts = [...posts, action.payload]
+      })
+      .addCase(deletePost.fulfilled, (state, action) => {
+        if (!action.payload?.id) {
+          console.log('Delete could not be completed')
+          console.log(action.payload)
+          return
+        }
+        const { id } = action.payload
+        const posts = state.posts.filter(post => post.id !== id)
+        state.posts = posts
+      })
   }
 })
 
 // selectors
 export const selectAllPosts = (state) => state.posts.posts
+export const selectPostById = (state, postId) => state.posts.posts.find(post => post.id === postId)
 export const getPostsStatus = (state) => state.posts.status
 export const getPostsError = (state) => state.posts.error
 
