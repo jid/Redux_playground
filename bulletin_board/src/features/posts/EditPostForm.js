@@ -29,7 +29,7 @@ const EditPostForm = () => {
 
   const onTitleChanged = e => setTitle(e.target.value)
   const onContentChanged = e => setContent(e.target.value)
-  const onAuthorChanged = e => setAuthor(e.target.value)
+  const onAuthorChanged = e => setAuthor(Number(e.target.value))
 
   const formValid = [title, content, userId].every(Boolean) && requestStatus === THUNK_STATUSES.idle
 
