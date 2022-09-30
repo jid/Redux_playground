@@ -38,8 +38,9 @@ const usersSlice = createSlice({
 
 // selectors
 export const selectAllUsers = (state) => state.users.users
-export const getUsersStatus = (state) => state.users.status
-export const getUsersError = (state) => state.users.error
+export const selectUserById = (state, userId) => state.users.users.find(user => user.id === userId)
+// export const getUsersStatus = (state) => state.users.status
+// export const getUsersError = (state) => state.users.error
 
 // actions
 // export const { } = usersSlice.actions
