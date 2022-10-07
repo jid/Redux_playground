@@ -1,25 +1,28 @@
 import { useSelector } from 'react-redux'
-import { selectPostIds, getPostsStatus, getPostsError } from './postsSlice'
+import { selectPostIds, useGetPostsQuery } from './postsSlice'
 import PostsExcerpt from './PostsExcerpt'
-import { THUNK_STATUSES } from '../../common/dicts'
 
 const PostsList = () => {
+  const {
+    isLoading,
+    isSuccess,
+    isError,
+    error
+  } = useGetPostsQuery()
+
   const orderedPostIds = useSelector(selectPostIds)
-  const postsStatus = useSelector(getPostsStatus)
-  const postsError = useSelector(getPostsError)
 
   let content
-  if (postsStatus === THUNK_STATUSES.loading) {
+  if (isLoading) {
     content = <p>Loading...</p>
-  } else if (postsStatus === THUNK_STATUSES.succeeded) {
+  } else if (isSuccess) {
     content = orderedPostIds.map(postId => <PostsExcerpt key={postId} postId={postId} />)
-  } else if (postsStatus === THUNK_STATUSES.failed) {
-    content = <p>{postsError}</p>
+  } else if (isError) {
+    content = <p>{error}</p>
   }
 
   return (
     <section>
-      <h2>Posts:</h2>
       {content}
     </section>
   )

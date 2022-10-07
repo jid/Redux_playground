@@ -1,9 +1,10 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { useState } from 'react'
-import { useSelector, useDispatch } from 'react-redux'
+import { useSelector } from 'react-redux'
 import { selectAllUsers } from '../users/usersSlice'
-import { selectPostById, updatePost, deletePost } from './postsSlice'
-import { THUNK_STATUSES } from '../../common/dicts'
+import { selectPostById } from './postsSlice'
+
+import { useUpdatePostMutation, useDeletePostMutation } from './postsSlice'
 
 const EditPostForm = () => {
   const { postId } = useParams()
@@ -15,9 +16,8 @@ const EditPostForm = () => {
   const [title, setTitle] = useState(post?.title)
   const [content, setContent] = useState(post?.body)
   const [userId, setAuthor] = useState(post?.userId)
-  const [requestStatus, setRequestStatus] = useState(THUNK_STATUSES.idle)
-
-  const dispatch = useDispatch()
+  const [updatePost, { isLoading }] = useUpdatePostMutation()
+  const [deletePost] = useDeletePostMutation()
 
   if (!post) {
     return (
@@ -31,19 +31,25 @@ const EditPostForm = () => {
   const onContentChanged = e => setContent(e.target.value)
   const onAuthorChanged = e => setAuthor(Number(e.target.value))
 
-  const formValid = [title, content, userId].every(Boolean) && requestStatus === THUNK_STATUSES.idle
+  const formValid = [title, content, userId].every(Boolean) && !isLoading
 
-  const onSavePostClicked = e => {
+  const onSavePostClicked = async (e) => {
     if (formValid) {
       try {
-        setRequestStatus(THUNK_STATUSES.loading)
-        dispatch(updatePost({
+        // dispatch(updatePost({
+        //   id: postId,
+        //   title,
+        //   body: content,
+        //   userId,
+        //   reactions: post.reactions
+        // })).unwrap()
+        await updatePost({
           id: postId,
           title,
           body: content,
           userId,
           reactions: post.reactions
-        })).unwrap()
+        }).unwrap()
 
         setTitle('')
         setContent('')
@@ -51,8 +57,6 @@ const EditPostForm = () => {
         navigate(`/post/${postId}`)
       } catch (err) {
         console.error('Failed to save post', err)
-      } finally {
-        setRequestStatus(THUNK_STATUSES.idle)
       }
     }
   }
@@ -61,12 +65,12 @@ const EditPostForm = () => {
     <option key={user.id} value={user.id}>{user.name}</option>
   ))
 
-  const onDeletePostClicked = e => {
+  const onDeletePostClicked = async (e) => {
     try {
-      setRequestStatus(THUNK_STATUSES.loading)
-      dispatch(deletePost({
-        id: postId
-      })).unwrap()
+      // dispatch(deletePost({
+      //   id: postId
+      // })).unwrap()
+      await deletePost({ id: postId }).unwrap()
 
       setTitle('')
       setContent('')
@@ -74,8 +78,6 @@ const EditPostForm = () => {
       navigate('/')
     } catch (err) {
       console.error('Failed to delete post', err)
-    } finally {
-      setRequestStatus(THUNK_STATUSES.idle)
     }
   }
 

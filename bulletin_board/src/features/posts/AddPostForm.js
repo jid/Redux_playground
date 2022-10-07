@@ -1,18 +1,16 @@
 import { useState } from "react";
-import { useDispatch, useSelector } from 'react-redux'
-import { addPost } from './postsSlice'
+import { useSelector } from 'react-redux'
 import { selectAllUsers } from '../users/usersSlice'
-import { THUNK_STATUSES } from "../../common/dicts";
 import { useNavigate } from 'react-router-dom'
+import { useAddNewPostMutation } from "./postsSlice";
 
 const AddPostForm = () => {
-  const dispatch = useDispatch()
+  const [addNewPost, { isLoading }] = useAddNewPostMutation()
   const navigate = useNavigate()
 
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [userId, setUserId] = useState('')
-  const [addRequestStatus, setAddRequestStatus] = useState(THUNK_STATUSES.idle)
 
   const users = useSelector(selectAllUsers)
 
@@ -20,23 +18,19 @@ const AddPostForm = () => {
   const onContentChanged = (e) => setContent(e.target.value)
   const onAuthorChanged = (e) => setUserId(e.target.value)
 
-  const formValid = [title, content, userId].every(Boolean) && addRequestStatus === THUNK_STATUSES.idle
+  const formValid = [title, content, userId].every(Boolean) && !isLoading
 
-  const onSavePostClicked = (e) => {
+  const onSavePostClicked = async (e) => {
     if (formValid) {
       try {
-        setAddRequestStatus(THUNK_STATUSES.pending)
-        dispatch(addPost({ title, body: content, userId: parseInt(userId, 10) })).unwrap()
+        await addNewPost({ title, body: content, userId }).unwrap()
 
         setTitle('')
         setContent('')
         setUserId('')
-
         navigate('/')
       } catch (err) {
         console.error('Failed to save post', err)
-      } finally {
-        setAddRequestStatus(THUNK_STATUSES.idle)
       }
     }
   }
